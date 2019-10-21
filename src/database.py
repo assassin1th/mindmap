@@ -17,23 +17,24 @@ class image_database (object):
             img_list.append ((img['id'], img['image_path'], img['master_name']))
         self.cursor.executemany ("INSERT INTO images VALUES (?, ?, ?)", img_list)
 
-        self.conn.commit ();
+        self.conn.commit ()
     
     def add_column (self, column_name):
         self.cursor.execute ("""ALTER TABLE images ADD COLUMN %s""" % column_name)
 
     def save (self):
-        self.conn.commit ();
+        self.conn.commit ()
     
     def get_column_names (self):
         self.cursor.execute ('SELECT * FROM images')
         return tuple (map (lambda x: x[0], self.cursor.description))
 
     def update_prop (self, id, prop, val):
-        self.cursor.execute ('UPDATE images SET %s=%s WHERE id=%d' % (prop, val, id))
+        self.cursor.execute ("""UPDATE images SET %s = '%s' WHERE id=%d""" % (prop, val, id))
+        self.conn.commit ()
     
     def get_data_by_prop (self, prop_name):
-        self.cursor.execute ('SELECT MIN(id) AS id, image_path, %s FROM imgaes GROUP BY id' % prop_name)
+        self.cursor.execute ('SELECT MIN(id) AS id, image_path, %s FROM images GROUP BY id' % prop_name)
         return self.cursor.fetchall ()
     def print (self):
         self.cursor.execute ('SELECT MIN(id) AS id, image_path, type FROM images GROUP BY id')
