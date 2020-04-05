@@ -42,7 +42,13 @@ class image_database (object):
         return self.cursor.fetchall ()
 
     def get_by_prop (self, field, prop_name, prop_val):
-        self.cursor.execute ('SELECT %s FROM images WHERE %s = %s' % (field, prop_name, prop_val))
+        if type (prop_val) is str:
+            self.cursor.execute ("SELECT %s FROM images WHERE %s = '%s'" % (field, prop_name, prop_val))
+        else:
+            self.cursor.execute ('SELECT %s FROM images WHERE %s = %s' % (field, prop_name, prop_val))
+        return self.cursor.fetchall ()
+    def get_column_unique_values (self, column_name):
+        self.cursor.execute ('SELECT %s FROM images GROUP BY %s' % (column_name, column_name))
         return self.cursor.fetchall ()
 
     def print (self):

@@ -200,8 +200,13 @@ class window (object):
         self.group_len_entry.grid (row = 0, column = 1)
         self.group_len_entry.focus ()
 
-        self.ok_btn = Button (self.window, text='Ok', command=lambda: gen_out.gen_outputs (db, int (self.group_len_entry.value ())))
-        sefl.ok_btn.grid (row = 1, column = 1)
+        self.ok_btn = Button (self.window, text='Ok', command=lambda: self.gen_outputs ())
+        self.ok_btn.grid (row = 1, column = 1)
+    
+    def gen_outputs (self):
+        gen_out.gen_outputs (self.db, int (self.group_len_entry.get ()))
+        
+        self.go_to_conf_db_window ()
 
     def go_to_select_db_window (self):
         self.clear_window ()
