@@ -12,6 +12,15 @@ def gen_outputs (db, group_len):
 
     save_workbook (wb, '../out/log.xlsx')
 
+def gen_groups_by_mindmap_type (db, group_len, wb):
+    mindmap_types = list (map (lambda x: x[0], db.get_column_unique_values ('mindmap_type')))
+
+    for mindmap_type in mandmap_types:
+        sheet = wb.create_sheet (mindmap_type)
+
+        masters = list (map (lambda x: x[2], db.get_by_prop ('master_name', 'mindmap_type', minmap_type)))
+        gen_groups (masters, group_len, sheet)
+
 def group_weight (group, db):
     n = len (group)
     l_group = list (group)
