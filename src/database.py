@@ -29,17 +29,26 @@ class image_database (object):
         self.cursor.execute ('SELECT * FROM images')
         return tuple (map (lambda x: x[0], self.cursor.description))
 
-    def update_prop (self, id, prop, val):
-        self.cursor.execute ("""UPDATE images SET %s = '%s' WHERE id=%d""" % (prop, val, id))
+    def update_prop (self, id, prop, val, id_name = 'id'):
+        if type (id) is str:
+            self.cursor.execute ("""UPDATE images SET %s = '%s' WHERE %s='%s'""" % (prop, val,id_name, str (id)))
+        else:
+            self.cursor.execute ("""UPDATE images SET %s = '%s' WHERE %s=%d""" % (prop, val,id_name, id))
+            
         self.conn.commit ()
     
     def get_data_by_prop (self, prop_name):
         self.cursor.execute ('SELECT MIN(id) AS id, image_path, %s FROM images GROUP BY id' % prop_name)
         return self.cursor.fetchall ()
+
+    def get_by_prop (self, field, prop_name, prop_val):
+        self.cursor.execute ('SELECT %s FROM images WHERE %s = %s' % (field, prop_name, prop_val))
+        return self.cursor.fetchall ()
+
     def print (self):
-        self.cursor.execute ('SELECT MIN(id) AS id, image_path, type FROM images GROUP BY id')
+        self.cursor.execute ('SELECT MIN(id) AS id, image_path, type, master_name, mindmap_type FROM images GROUP BY id')
         print (self.cursor.fetchall ())
 if __name__ == '__main__':
-    db = image_database ('../db/first.db')
+    db = image_database ('../db/Map.db')
 
     db.print ()

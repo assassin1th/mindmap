@@ -19,6 +19,16 @@ def parse_image_name (file_name):
     result = re.search (r'[А-Яа-я]+', file_name)
     return result.group (0)
 
+def fix_image_paths (db):
+    elems = list (map (lambda x: (x[0], x[2]), db.get_data_by_prop ('image_path')))
+    for elem in elems:
+        new_path = '../images'
+        print (elem[1].split('\\')[-2:])
+        for suffix in elem[1].split ('\\')[-2:]:
+            new_path = new_path + '/' + suffix
+
+        db.update_prop (int (elem[0]), 'image_path', new_path)
+
 if __name__ == '__main__':
     print (parse_image_dir ('../images/'))
 

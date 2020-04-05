@@ -5,7 +5,10 @@ from tkinter import filedialog
 import os
 import database
 import image_tools
+import gen_out
 from PIL import Image, ImageTk
+import openpyxl
+
 class window (object):
     def __init__ (self):
         self.window = Tk()
@@ -175,11 +178,30 @@ class window (object):
         self.change_prop_btn = Button (self. window, text = 'Change poperty', command = lambda: self.go_to_change_prop_window ())
         self.change_prop_btn.grid (row = 3, column = 0)
 
-        self.generate_btn = Button (self.window, text = 'Generate outputs', command = lambda: messagebox.showinfo ('Error', 'not yet'))
+        self.generate_btn = Button (self.window, text = 'Generate outputs', command = lambda: self.go_to_gen_out_window ())
         self.generate_btn.grid (row = 4, column = 0)
 
+        self.fix_path_btn = Button (self.window, text = 'Fix image paths', command = lambda: image_tools.fix_image_paths (self.db))
+        self.fix_path_btn.grid (row = 5, column = 0)
+
+        self.update_props_from_file = Button (self.window, text = 'Update props from file', command = lambda: self.go_to_update_props_from_file_window ())
+        self.update_props_from_file.grid (row = 6, column = 0)
+
         self.back_to_db_list_btn = Button (self.window, text = 'back to db list', command = lambda: self.go_to_select_db_window ())
-        self.back_to_db_list_btn.grid (row = 5, column = 0)
+        self.back_to_db_list_btn.grid (row = 7, column = 0)
+
+    def go_to_gen_out_window (self):
+        self.clear_window ()
+
+        self.group_len_label = Label (self.window, text = 'Enter group length')
+        self.group_len_label.grid (row = 0, column = 0)
+
+        self.group_len_entry = Entry (self.window, width = 14)
+        self.group_len_entry.grid (row = 0, column = 1)
+        self.group_len_entry.focus ()
+
+        self.ok_btn = Button (self.window, text='Ok', command=lambda: gen_out.gen_outputs (db, int (self.group_len_entry.value ())))
+        sefl.ok_btn.grid (row = 1, column = 1)
 
     def go_to_select_db_window (self):
         self.clear_window ()
@@ -205,6 +227,35 @@ class window (object):
         self.next_btn = Button (self.window, text = 'next', command= lambda: self.go_to_conf_db_window() if (self.open_database (self.database_combo.get ())) else messagebox.showinfo ('Error', 'Please enter correct db name'))
             
         self.next_btn.grid (row = 3, column = 1)
+    def go_to_update_props_from_file_window (self):
+        self.clear_window ()
+
+        self.prop_name_label = Label (self.window, text = 'Enter property name:')
+        self.prop_name_label.grid (row = 0, column = 0)
+
+        self.prop_name_combo = Combobox (self.window)
+        self.prop_name_combo['values'] = self.db.get_column_names ()
+        self.prop_name_combo.grid (row = 0, column = 1)
+        self.prop_name_combo.current (0)
+
+        self.choose_file_btn = Button (self.window, text = 'Choose src file', command = lambda: self.ask_file_name ())
+        self.choose_file_btn.grid (row = 1, column = 0)
+
+        self.ok_btn = Button (self.window, text = 'OK', command = lambda: self.update_props ())
+        self.ok_btn.grid (row = 2, column = 1)
+
+    def ask_file_name (self):
+        self.file_name = filedialog.askopenfilename ()
+
+    def update_props (self):
+        prop_name = self.prop_name_combo.get ()
+
+        wb = openpyxl.load_workbook (self.file_name)
+        sheet = wb.active
+
+        for row in sheet.rows:
+            self.db.update_prop (id=row[0].value, id_name='master_name', prop=prop_name, val=row[1].value) 
+        self.go_to_conf_db_window ()
 
 if __name__ == '__main__':
     w = window ()
