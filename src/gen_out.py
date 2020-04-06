@@ -6,21 +6,61 @@ from openpyxl.utils import get_column_letter
 def gen_outputs (db, group_len):
     wb = openpyxl.Workbook ()
 
-    sheet = wb.create_sheet ('groups')
     masters = list (map (lambda x: x[0], db.get_column_unique_values ('master_name')))
+    
+    sheet = wb.create_sheet ('groups')
     gen_groups (masters, group_len, db, sheet)
     gen_groups_by_mindmap_type (db, group_len, wb)
+    gen_weight_by_mindmap_type (db, wb)
 
     save_workbook (wb, '../out/log.xlsx')
 
+def get_key (m, ms):
+    for k, b in ms.items ():
+        if m == b:
+            return k
+
+def gen_weight_by_mindmap_type (db, wb):
+    mindmap_types = list (map (lambda x: x[0], db.get_column_unique_values ('mindmap_type')))
+
+    sheet = wb.create_sheet ('weight_by_mindmap_type')
+    masters_by_mmt = dict ()
+    for m_type in mindmap_types:
+        masters_by_mmt[m_type] = set (map (lambda x: x[0], db.get_by_prop ('master_name', 'mindmap_type', m_type)))
+
+    i = 1
+    for j in range (len (mindmap_types)):
+        res_group = masters_by_mmt[mindmap_types[j]]
+
+        mmt = set ()
+        mmt.add(mindmap_types[j])
+
+        print_groups (mmt, res_group, sheet, db, i, len (mindmap_types))
+        i += 1
+
+        for k in range (j + 1, len (mindmap_types)):
+            res_group = res_group.union (masters_by_mmt[mindmap_types[k]])
+            mmt.add (mindmap_types[k])
+            print_groups (mmt, res_group, sheet, db, i, len (mindmap_types))
+            i += 1
+            
+def print_groups (mmt, group, sheet, db, row, max_col):
+    l_mmt = list (mmt)
+    for i in range (len (l_mmt)):
+        sheet[get_column_letter (i + 1) + str (row)] = l_mmt[i]
+
+    if (len (group) > 1):
+        sheet[get_column_letter (max_col + 1) + str (row)] = group_weight (group, db)
+
 def gen_groups_by_mindmap_type (db, group_len, wb):
     mindmap_types = list (map (lambda x: x[0], db.get_column_unique_values ('mindmap_type')))
-    print (db.get_by_prop ('master_name', 'mindmap_type', ''))
+    
     for mindmap_type in mindmap_types:
-        sheet = wb.create_sheet (mindmap_type)
-
         masters = list (map (lambda x: x[0], db.get_by_prop ('master_name', 'mindmap_type', mindmap_type)))
-        gen_groups (masters, group_len, db, sheet)
+        
+        if len (masters) > 1:
+            sheet = wb.create_sheet (mindmap_type)
+            gen_groups (masters, group_len, db, sheet)
 
 def group_weight (group, db):
     n = len (group)
